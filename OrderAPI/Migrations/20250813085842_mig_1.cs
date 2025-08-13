@@ -15,7 +15,8 @@ namespace OrderAPI.Migrations
                 name: "OrderOutboxes",
                 columns: table => new
                 {
-                    IdempotentToken = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     OccuredOn = table.Column<DateTime>(type: "datetime2", nullable: false),
                     ProcessedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     Type = table.Column<string>(type: "nvarchar(max)", nullable: false),
@@ -23,7 +24,7 @@ namespace OrderAPI.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_OrderOutboxes", x => x.IdempotentToken);
+                    table.PrimaryKey("PK_OrderOutboxes", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(

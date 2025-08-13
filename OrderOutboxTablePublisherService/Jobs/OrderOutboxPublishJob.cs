@@ -1,36 +1,32 @@
-﻿using MassTransit;
+﻿
+using MassTransit;
 using OrderOutboxTablePublisherService;
 using OrderOutboxTablePublisherService.Entites;
 using Quartz;
 using Shared.Events;
 using System.Text.Json;
 
-namespace Order.Outbox.Table.Publisher.Service.Jobs
+namespace OrderOutboxTablePublisherService.Jobs
 {
     public class OrderOutboxPublishJob(IPublishEndpoint publishEndpoint) : IJob
     {
         public async Task Execute(IJobExecutionContext context)
         {
-            // Veritabanı durumu kontrolü ve meşgul etme/serbest bırakma
             if (OrderOutboxSingletonDatabase.DataReaderState)
             {
                 OrderOutboxSingletonDatabase.DataReaderBusy();
 
-                // Doğru sütun adıyla (ProcessedDate) sorgu yapma
-                List<OrderOutbox> orderOutboxes = (await OrderOutboxSingletonDatabase.QueryAsync<OrderOutbox>($@"SELECT * FROM ORDEROUTBOXES WHERE ProcessedDate IS NULL ORDER BY OccuredOn ASC")).ToList();
+                List<OrderOutbox> orderOutboxes = (await OrderOutboxSingletonDatabase.QueryAsync<OrderOutbox>($@"SELECT * FROM ORDEROUTBOXES WHERE PROCESSEDDATE IS NULL ORDER BY OCCUREDON ASC")).ToList();
 
                 foreach (var orderOutbox in orderOutboxes)
                 {
-                    // Yalnızca OrderCreatedEvent tipindeki mesajları işle
                     if (orderOutbox.Type == nameof(OrderCreatedEvent))
                     {
-                        OrderCreatedEvent? orderCreatedEvent = JsonSerializer.Deserialize<OrderCreatedEvent>(orderOutbox.Payload);
+                        OrderCreatedEvent orderCreatedEvent = JsonSerializer.Deserialize<OrderCreatedEvent>(orderOutbox.Payload);
                         if (orderCreatedEvent != null)
                         {
                             await publishEndpoint.Publish(orderCreatedEvent);
-
-                            // Güncelleme işlemini güvenli bir şekilde yapma
-                            await OrderOutboxSingletonDatabase.ExecuteAsync($"UPDATE ORDEROUTBOXES SET ProcessedDate = GETDATE() WHERE IdempotentToken = '{orderOutbox.IdempotentToken}'");
+                            OrderOutboxSingletonDatabase.ExecuteAsync($"UPDATE ORDEROUTBOXES SET PROCESSEDDATE = GETDATE() WHERE ID = '{orderOutbox.Id}'");
                         }
                     }
                 }

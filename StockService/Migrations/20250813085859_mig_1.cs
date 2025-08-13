@@ -1,5 +1,4 @@
-﻿using System;
-using Microsoft.EntityFrameworkCore.Migrations;
+﻿using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -15,13 +14,14 @@ namespace StockService.Migrations
                 name: "OrderInboxes",
                 columns: table => new
                 {
-                    IdempotentToken = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     Processed = table.Column<bool>(type: "bit", nullable: false),
                     Payload = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_OrderInboxes", x => x.IdempotentToken);
+                    table.PrimaryKey("PK_OrderInboxes", x => x.Id);
                 });
         }
 
