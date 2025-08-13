@@ -9,7 +9,8 @@ namespace StockService.Models.Entites
 {
     public class OrderInbox
     {
-        public int Id { get; set; }
+        [Key]
+        public Guid IdempotentToken { get; set; }
         public bool Processed { get; set; }
         public string Payload { get; set; }
     }
